@@ -1,0 +1,76 @@
+---
+import Layout from "../layouts/Layout.astro";
+let gameData; // inicialitzem la variable gameData
+import getInfo from "../scripts/ruleta.js";
+
+// si NO existeix la cookie "ruleta", la creem i recarreguem la pàgina
+if (!Astro.cookies.has("ruleta")) {
+	Astro.cookies.set("ruleta", JSON.stringify([]), { path: "/" });
+	return Astro.redirect("/");
+} else {
+	//si existeix la cookie "ruleta", la parsem a JSON i la guardam en la variable gameData
+	let cookie = Astro.cookies.get("ruleta");
+	gameData = JSON.parse(cookie.value); // ull! el valor està a
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//var datafromRulet = getInfo();
+
+function getCurrentDate() {
+	const date = new Date();
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based
+	const day = String(date.getDate()).padStart(2, "0");
+	const hours = String(date.getHours()).padStart(2, "0");
+	const mins = String(date.getMinutes()).padStart(2, "0");
+	const secs = String(date.getSeconds()).padStart(2, "0");
+
+	return `${year}-${month}-${day} ${hours}:${mins}:${secs}`;
+}
+
+function updateCookie(apuesta, resultado, saldo) {
+	let cookie = Astro.cookies.get("ruleta");
+	let cookieData = JSON.parse(cookie.value);
+	const currentDate = getCurrentDate();
+	cookieData.push({
+		currentDate,
+		apuesta,
+		resultado,
+		saldo,
+	});
+	Astro.cookies.set("ruleta", JSON.stringify(cookieData), { path: "/" });
+}
+
+// la pàgina mostra links a les jugades, un botó per netejar l'historial de jugades, i la llista de jugades fetes
+---
+
+<Layout>
+	<script src="../scripts/ruleta.js"></script>
+	<script src="../scripts/historial.js"></script>
+	<!-- <script type="text/javascript" charset="UTF-8"></script> -->
+	<h1 style="text-align: center;">JUGA A LA RULETA</h1>
+
+	<div style="text-align: center;">
+		<button id="par">Apuesta pares</button>
+		<button id="impar">Apuesta impares</button>
+		<button id="rojo">Rojo</button>
+		<button id="negro">Negro</button>
+		<p>para un numero pulse el numero</p>
+	</div>
+
+	<div id="chart" style="text-align: center;"></div>
+
+	<div id="question">
+		<h1 style="text-align: center;">DINERO: 150</h1>
+		<h2 style="text-align: center;"></h2>
+	</div>
+
+	<hr />
+	<h1>Jugades anteriors</h1>
+	<a href="./jugada/historial.astro">Historial</a>
+	<a href="/neteja">Neteja historial</a>
+	<br />
+	<br />
+	<div id="historial"></div>
+</Layout>
